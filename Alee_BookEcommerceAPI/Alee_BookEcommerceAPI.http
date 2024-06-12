@@ -1,0 +1,6 @@
+@Alee_BookEcommerceAPI_HostAddress = http://localhost:5048
+
+GET {{Alee_BookEcommerceAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

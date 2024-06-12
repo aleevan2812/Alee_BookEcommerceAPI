@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\buildMultiTargeting\Alee_BookEcommerceAPI.props" />
+</Project>
