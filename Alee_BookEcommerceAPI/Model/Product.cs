@@ -21,10 +21,10 @@ public class Product
     public double? ListPrice { get; set; }
     
     [Display(Name = "Price for 1-50")]
-    public double Price { get; set; }
+    public double? Price { get; set; }
     
     [Display(Name = "Price for 50+")]
-    public double Price50 { get; set; }
+    public double? Price50 { get; set; }
     
     [Display(Name = "Price for 100+")]
     public double? Price100 { get; set; }
@@ -38,5 +38,6 @@ public class Product
     // [ValidateNever]
     // public string ImageUrl { get; set; }
 
-    [ValidateNever] public List<ProductImage> ProductImages { get; set; }
+    public List<string>? ImagesUrl { get; set; }
+    public List<string>? ImagesLocalPath { get; set; }
 }

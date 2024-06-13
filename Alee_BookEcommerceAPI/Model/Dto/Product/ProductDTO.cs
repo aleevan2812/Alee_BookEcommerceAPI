@@ -31,7 +31,5 @@ public class ProductDTO
     [Range(1, 1000)]
     public double Price100 { get; set; }
 
-    public CategoryDTO Category { get; set; }
-
-    public List<Model.ProductImage>? ProductImages { get; set; }
+    public List<string> ImagesUrl { get; set; }
 }

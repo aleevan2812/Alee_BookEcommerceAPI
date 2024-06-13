@@ -47,6 +47,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options => { options.SwaggerEndpoint("/swagger/v1/swagger.json", "Alee_VillaV1"); });
 }
 
+app.UseStaticFiles(); // render wwwroot
+
 app.UseHttpsRedirection();
 
 app.MapControllers();

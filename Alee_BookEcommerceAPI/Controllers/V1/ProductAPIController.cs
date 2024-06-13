@@ -87,7 +87,7 @@ public class ProductAPIController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<APIResponse>> CreateProduct([FromForm] ProductDTO createDto)
+    public async Task<ActionResult<APIResponse>> CreateProduct([FromForm] ProductCreateDTO createDto)
     {
         try
         {
@@ -101,6 +101,44 @@ public class ProductAPIController : ControllerBase
                 return BadRequest(createDto);
 
             Product product = _mapper.Map<Product>(createDto);
+
+            await _unitOfWork.Product.CreateAsync(product);
+            await _unitOfWork.SaveAsync();
+            if (createDto.ProductImages != null)
+            {
+                product.ImagesUrl = new List<string>();
+                product.ImagesLocalPath = new List<string>();
+                for (int i = 0; i < createDto.ProductImages.Count(); i++)
+                {
+                    string fileName = product.Id + "-"+ i + Path.GetExtension(createDto.ProductImages[i].FileName);
+                    string filePath = @"wwwroot\ProductImages\" + fileName;
+                    
+                    var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+                    
+                    FileInfo file = new FileInfo(directoryLocation);
+
+                    using (var fileStream = new FileStream(directoryLocation, FileMode.Create))
+                    {
+                        createDto.ProductImages[i].CopyTo(fileStream);
+                    }
+                    
+                    // Lấy URL gốc của ứng dụng bằng cách kết hợp Scheme (HTTP/HTTPS), Host và PathBase từ HttpContext.Request.
+                    var baseUrl =
+                        $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+                    
+                    // URL đầy đủ của tệp ảnh để sử dụng trên giao diện người dùng.
+                    product.ImagesUrl.Add(baseUrl + "/ProductImages/" + fileName);
+                    // Đường dẫn tệp ảnh lưu trữ trên máy chủ.
+                    product.ImagesLocalPath.Add(filePath);
+                }
+                
+                await _unitOfWork.Product.UpdateAsync(product);
+                await _unitOfWork.SaveAsync();
+            }
+            
+            _apiResponse.Result = _mapper.Map<ProductDTO>(product);
+            _apiResponse.StatusCode = HttpStatusCode.Created;
+            return CreatedAtRoute("GetProduct", new { id = product.Id }, _apiResponse);
         }
         catch (Exception e)
         {
@@ -110,4 +148,21 @@ public class ProductAPIController : ControllerBase
 
         return _apiResponse;
     }
+
+    [HttpPut]
+    public async Task<ActionResult<APIResponse>> CreateProduct([FromForm] ProductUpdateDTO updateDto)
+    {
+        try
+        {
+            
+        }
+        catch (Exception e)
+        {
+            _apiResponse.IsSuccess = false;
+            _apiResponse.ErrorMessages = new List<string> { e.ToString() };
+        }
+
+        return _apiResponse;
+    }
+    
 }
