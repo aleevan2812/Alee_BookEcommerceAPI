@@ -5,9 +5,11 @@ namespace Alee_BookEcommerceAPI.Model;
 
 public class ProductImage
 {
+    [Key]
     public int Id { get; set; }
 
-    [Required] public string ImageUrl { get; set; }
+    public string ImageUrl { get; set; }
+    public string ImagesLocalPath { get; set; }
 
     public int ProductId { get; set; }
 

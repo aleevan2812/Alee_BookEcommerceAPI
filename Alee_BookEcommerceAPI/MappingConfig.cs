@@ -1,5 +1,6 @@
 using Alee_BookEcommerceAPI.Model;
 using Alee_BookEcommerceAPI.Model.Dto;
+using Alee_BookEcommerceAPI.Model.Dto.ProductImage;
 using AutoMapper;
 
 namespace Alee_BookEcommerceAPI;
@@ -12,8 +13,11 @@ public class MappingConfig : Profile
         CreateMap<Category, CategoryUpdateDTO>().ReverseMap();
         CreateMap<Category, CategoryDTO>().ReverseMap();
 
-        CreateMap<Product, ProductCreateDTO>().ReverseMap();
+        CreateMap<ProductCreateDTO, Product>().ForMember(dest => dest.ProductImages,  opt => opt.Ignore());
         CreateMap<Product, ProductUpdateDTO>().ReverseMap();
         CreateMap<Product, ProductDTO>().ReverseMap();
+        
+        CreateMap<ProductImage, ProductImageCreateDTO>().ReverseMap();
+        CreateMap<ProductImage, ProductImageDTO>().ReverseMap();
     }
 }

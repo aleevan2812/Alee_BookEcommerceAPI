@@ -106,36 +106,42 @@ public class ProductAPIController : ControllerBase
             await _unitOfWork.SaveAsync();
             if (createDto.ProductImages != null)
             {
-                product.ImagesUrl = new List<string>();
-                product.ImagesLocalPath = new List<string>();
+                product.ProductImages = new List<ProductImage>();
+
                 for (int i = 0; i < createDto.ProductImages.Count(); i++)
                 {
-                    string fileName = product.Id + "-"+ i + Path.GetExtension(createDto.ProductImages[i].FileName);
+                    string fileName = product.Id + "-" + i + Path.GetExtension(createDto.ProductImages[i].FileName);
                     string filePath = @"wwwroot\ProductImages\" + fileName;
-                    
+
                     var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
-                    
-                    FileInfo file = new FileInfo(directoryLocation);
 
                     using (var fileStream = new FileStream(directoryLocation, FileMode.Create))
                     {
                         createDto.ProductImages[i].CopyTo(fileStream);
                     }
-                    
+
                     // Lấy URL gốc của ứng dụng bằng cách kết hợp Scheme (HTTP/HTTPS), Host và PathBase từ HttpContext.Request.
                     var baseUrl =
                         $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
-                    
+
+                    // Create ProductImage
+                    ProductImage productImage = new();
                     // URL đầy đủ của tệp ảnh để sử dụng trên giao diện người dùng.
-                    product.ImagesUrl.Add(baseUrl + "/ProductImages/" + fileName);
+                    productImage.ImageUrl = baseUrl + "/ProductImages/" + fileName;
                     // Đường dẫn tệp ảnh lưu trữ trên máy chủ.
-                    product.ImagesLocalPath.Add(filePath);
+                    productImage.ImagesLocalPath = filePath;
+                    productImage.ProductId = product.Id;
+
+                    await _unitOfWork.ProductImage.CreateAsync(productImage);
+                    await _unitOfWork.SaveAsync();
+
+                    // product.ProductImages.Add(productImage); duplicate 2 images
                 }
-                
+
                 await _unitOfWork.Product.UpdateAsync(product);
                 await _unitOfWork.SaveAsync();
             }
-            
+
             _apiResponse.Result = _mapper.Map<ProductDTO>(product);
             _apiResponse.StatusCode = HttpStatusCode.Created;
             return CreatedAtRoute("GetProduct", new { id = product.Id }, _apiResponse);
@@ -150,11 +156,10 @@ public class ProductAPIController : ControllerBase
     }
 
     [HttpPut]
-    public async Task<ActionResult<APIResponse>> CreateProduct([FromForm] ProductUpdateDTO updateDto)
+    public async Task<ActionResult<APIResponse>> UpdateProduct([FromForm] ProductUpdateDTO updateDto)
     {
         try
         {
-            
         }
         catch (Exception e)
         {
@@ -164,5 +169,4 @@ public class ProductAPIController : ControllerBase
 
         return _apiResponse;
     }
-    
 }

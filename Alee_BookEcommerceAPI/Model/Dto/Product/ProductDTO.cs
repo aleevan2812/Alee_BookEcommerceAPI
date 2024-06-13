@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Alee_BookEcommerceAPI.Model.Dto.ProductImage;
 
 namespace Alee_BookEcommerceAPI.Model.Dto;
 
@@ -31,5 +32,5 @@ public class ProductDTO
     [Range(1, 1000)]
     public double Price100 { get; set; }
 
-    public List<string> ImagesUrl { get; set; }
+    public List<ProductImageDTO>? ProductImages { get; set; }
 }

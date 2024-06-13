@@ -38,6 +38,5 @@ public class Product
     // [ValidateNever]
     // public string ImageUrl { get; set; }
 
-    public List<string>? ImagesUrl { get; set; }
-    public List<string>? ImagesLocalPath { get; set; }
+    public List<ProductImage>? ProductImages { get; set; }
 }
