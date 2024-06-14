@@ -157,11 +157,85 @@ public class ProductAPIController : ControllerBase
         return _apiResponse;
     }
 
-    [HttpPut]
-    public async Task<ActionResult<APIResponse>> UpdateProduct([FromForm] ProductUpdateDTO updateDto)
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult<APIResponse>> UpdateProduct(int id, [FromForm] ProductUpdateDTO updateDto)
     {
         try
         {
+            if (id == 0)
+            {
+                _apiResponse.StatusCode = HttpStatusCode.BadRequest;
+                return BadRequest(_apiResponse);
+            }
+            
+            if (updateDto == null)
+                return BadRequest();
+            
+            if (updateDto.Id != id)
+            {
+                ModelState.AddModelError("ErrorMessages", "Can not modify Id!");
+                return BadRequest(ModelState);
+            }
+            
+            // Product from Db
+            var product = await _unitOfWork.Product.GetAsyncWithProductImages(u => u.Id == id, tracked: false);
+
+            if (product == null)
+            {
+                _apiResponse.StatusCode = HttpStatusCode.NotFound;
+                return NotFound(_apiResponse);
+            }
+
+            // Delete Image
+            var productImages = await _unitOfWork.ProductImage.GetAllAsync(u => u.ProductId == id);
+            productImages.ForEach(productImage =>
+                {
+                    var filePath = productImage.ImagesLocalPath;
+                    if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
+                    _unitOfWork.ProductImage.RemoveAsync(productImage);
+                    _unitOfWork.SaveAsync();
+                }
+            );
+
+            product = _mapper.Map<Product>(updateDto);
+            
+            if (updateDto.ProductImages != null)
+            {
+                for (int i = 0; i < updateDto.ProductImages.Count(); i++)
+                {
+                    string fileName = "productId" + product.Id + "-" + i +
+                                      Path.GetExtension(updateDto.ProductImages[i].FileName);
+                    string filePath = @"wwwroot\ProductImages\" + fileName;
+
+                    var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+
+                    using (var fileStream = new FileStream(directoryLocation, FileMode.Create))
+                    {
+                        updateDto.ProductImages[i].CopyTo(fileStream);
+                    }
+
+                    // Lấy URL gốc của ứng dụng bằng cách kết hợp Scheme (HTTP/HTTPS), Host và PathBase từ HttpContext.Request.
+                    var baseUrl =
+                        $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+
+                    // Create ProductImage
+                    ProductImage productImage = new();
+                    // URL đầy đủ của tệp ảnh để sử dụng trên giao diện người dùng.
+                    productImage.ImageUrl = baseUrl + "/ProductImages/" + fileName;
+                    // Đường dẫn tệp ảnh lưu trữ trên máy chủ.
+                    productImage.ImagesLocalPath = filePath;
+                    productImage.ProductId = product.Id;
+
+                    await _unitOfWork.ProductImage.CreateAsync(productImage);
+                    await _unitOfWork.SaveAsync();
+                }
+
+                await _unitOfWork.Product.UpdateAsync(product);
+                await _unitOfWork.SaveAsync();
+
+                _apiResponse.StatusCode = HttpStatusCode.OK;
+                return CreatedAtRoute("GetProduct", new { id = product.Id }, _apiResponse);
+            }
         }
         catch (Exception e)
         {
@@ -190,7 +264,7 @@ public class ProductAPIController : ControllerBase
                 _apiResponse.StatusCode = HttpStatusCode.NotFound;
                 return NotFound(_apiResponse);
             }
-            
+
             // Delete Image
             product.ProductImages?.ForEach(productImage =>
                 {

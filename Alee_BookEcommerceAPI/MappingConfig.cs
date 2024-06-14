@@ -14,8 +14,8 @@ public class MappingConfig : Profile
         CreateMap<Category, CategoryDTO>().ReverseMap();
 
         CreateMap<ProductCreateDTO, Product>().ForMember(dest => dest.ProductImages,  opt => opt.Ignore());
-        // CreateMap<ProductCreateDTO, Product>();
-        CreateMap<Product, ProductUpdateDTO>().ReverseMap();
+        
+        CreateMap<ProductUpdateDTO, Product>().ForMember(dest => dest.ProductImages,  opt => opt.Ignore());
         CreateMap<Product, ProductDTO>().ReverseMap();
         
         CreateMap<ProductImage, ProductImageCreateDTO>().ReverseMap();

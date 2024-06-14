@@ -2,6 +2,7 @@ using Alee_BookEcommerceAPI;
 using Alee_BookEcommerceAPI.Data;
 using Alee_BookEcommerceAPI.Repository;
 using Alee_BookEcommerceAPI.Repository.IRepository;
+using Alee_BookEcommerceAPI.Sevices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +15,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IImageService, ImageSevice>();
 
 builder.Services.AddAutoMapper(typeof(MappingConfig));
 

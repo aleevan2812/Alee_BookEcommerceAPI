@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace Alee_BookEcommerceAPI.Model;
@@ -9,8 +11,8 @@ public class Product
     [Key] public int Id { get; set; }
 
     [Required] public string Title { get; set; }
-
-    public string Description { get; set; }
+    
+    public string? Description { get; set; }
 
     [Required] public string Author { get; set; }
 
@@ -35,5 +37,5 @@ public class Product
     [ValidateNever]
     public Category Category { get; set; }
 
-    public List<ProductImage>? ProductImages { get; set; }
+    public List<ProductImage>? ProductImages { get; set; } = new List<ProductImage>();
 }
