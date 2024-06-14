@@ -11,7 +11,8 @@ public class ProductImage
     public string ImageUrl { get; set; }
     public string ImagesLocalPath { get; set; }
 
+    [ForeignKey("Product")]
     public int ProductId { get; set; }
 
-    [ForeignKey("ProductId")] public Product Product { get; set; }
+     public Product Product { get; set; }
 }

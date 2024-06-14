@@ -1,6 +1,7 @@
 using System.Net;
 using Alee_BookEcommerceAPI.Model;
 using Alee_BookEcommerceAPI.Model.Dto;
+using Alee_BookEcommerceAPI.Model.Dto.ProductImage;
 using Alee_BookEcommerceAPI.Repository.IRepository;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
@@ -39,8 +40,25 @@ public class ProductAPIController : ControllerBase
             // use search
             if (!string.IsNullOrEmpty(search))
                 products = products.Where(u => u.Title.ToLower().Contains(search));
+            
+            var productsDTO = _mapper.Map<List<ProductDTO>>(products);
+            
+            IEnumerable<ProductImage> productImages = await _unitOfWork.ProductImage.GetAllAsync(includeProperties: "Product");
 
-            _apiResponse.Result = _mapper.Map<List<ProductDTO>>(products);
+            foreach (var image in productImages)
+            {
+                var product = productsDTO.FirstOrDefault(u => u.Id == image.ProductId);
+                if ( product != null)
+                {
+                    product.ProductImages.Add(new ProductImageDTO()
+                    {
+                        Id = image.Id,
+                        ImageUrl = image.ImageUrl
+                    });
+                }
+            }
+
+            _apiResponse.Result = productsDTO;
             _apiResponse.StatusCode = HttpStatusCode.OK;
 
             return Ok(_apiResponse);
@@ -65,15 +83,19 @@ public class ProductAPIController : ControllerBase
                 return BadRequest(_apiResponse);
             }
 
-            var products = await _unitOfWork.Product.GetAsync(u => u.Id == id);
+            var product = await _unitOfWork.Product.GetAsync(u => u.Id == id);
 
-            if (products == null)
+            if (product == null)
             {
                 _apiResponse.StatusCode = HttpStatusCode.NotFound;
                 return NotFound(_apiResponse);
             }
+            
+            var productImages = await _unitOfWork.ProductImage.GetAllAsync(u => u.ProductId == product.Id);
 
-            _apiResponse.Result = _mapper.Map<ProductDTO>(products);
+            if (productImages != null) product.ProductImages = productImages;
+
+            _apiResponse.Result = _mapper.Map<ProductDTO>(product);
             _apiResponse.StatusCode = HttpStatusCode.OK;
             return Ok(_apiResponse);
         }
@@ -106,11 +128,12 @@ public class ProductAPIController : ControllerBase
             await _unitOfWork.SaveAsync();
             if (createDto.ProductImages != null)
             {
-                product.ProductImages = new List<ProductImage>();
+                // product.ProductImages = new List<ProductImage>();
 
                 for (int i = 0; i < createDto.ProductImages.Count(); i++)
                 {
-                    string fileName = product.Id + "-" + i + Path.GetExtension(createDto.ProductImages[i].FileName);
+                    string fileName = "productId" + product.Id + "-" + i +
+                                      Path.GetExtension(createDto.ProductImages[i].FileName);
                     string filePath = @"wwwroot\ProductImages\" + fileName;
 
                     var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);

@@ -38,5 +38,5 @@ public class Product
     // [ValidateNever]
     // public string ImageUrl { get; set; }
 
-    public List<ProductImage>? ProductImages { get; set; }
+    public List<ProductImage>? ProductImages { get; set; } = new List<ProductImage>();
 }

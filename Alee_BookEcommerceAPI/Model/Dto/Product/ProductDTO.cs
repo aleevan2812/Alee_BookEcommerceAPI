@@ -5,7 +5,7 @@ namespace Alee_BookEcommerceAPI.Model.Dto;
 
 public class ProductDTO
 {
-    public string Id { get; set; }
+    public int Id { get; set; }
     public int CategoryId { get; set; }
 
     public string Title { get; set; }
@@ -32,5 +32,5 @@ public class ProductDTO
     [Range(1, 1000)]
     public double Price100 { get; set; }
 
-    public List<ProductImageDTO>? ProductImages { get; set; }
+    public List<ProductImageDTO>? ProductImages { get; set; } = new List<ProductImageDTO>();
 }
