@@ -35,8 +35,5 @@ public class Product
     [ValidateNever]
     public Category Category { get; set; }
 
-    // [ValidateNever]
-    // public string ImageUrl { get; set; }
-
-    public List<ProductImage>? ProductImages { get; set; } = new List<ProductImage>();
+    public List<ProductImage>? ProductImages { get; set; }
 }

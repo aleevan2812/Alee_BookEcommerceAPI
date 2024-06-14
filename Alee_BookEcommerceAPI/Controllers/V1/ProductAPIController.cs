@@ -1,7 +1,6 @@
 using System.Net;
 using Alee_BookEcommerceAPI.Model;
 using Alee_BookEcommerceAPI.Model.Dto;
-using Alee_BookEcommerceAPI.Model.Dto.ProductImage;
 using Alee_BookEcommerceAPI.Repository.IRepository;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
@@ -34,31 +33,15 @@ public class ProductAPIController : ControllerBase
     {
         try
         {
-            IEnumerable<Product> products = await _unitOfWork.Product.GetAllAsync(includeProperties: "Category",
+            IEnumerable<Product> products = await _unitOfWork.Product.GetAllAsyncWithProductImages(
+                includeProperties: "Category",
                 pageSize: pageSize, pageNumber: pageNumber);
 
             // use search
             if (!string.IsNullOrEmpty(search))
                 products = products.Where(u => u.Title.ToLower().Contains(search));
-            
-            var productsDTO = _mapper.Map<List<ProductDTO>>(products);
-            
-            IEnumerable<ProductImage> productImages = await _unitOfWork.ProductImage.GetAllAsync(includeProperties: "Product");
 
-            foreach (var image in productImages)
-            {
-                var product = productsDTO.FirstOrDefault(u => u.Id == image.ProductId);
-                if ( product != null)
-                {
-                    product.ProductImages.Add(new ProductImageDTO()
-                    {
-                        Id = image.Id,
-                        ImageUrl = image.ImageUrl
-                    });
-                }
-            }
-
-            _apiResponse.Result = productsDTO;
+            _apiResponse.Result = _mapper.Map<List<ProductDTO>>(products);
             _apiResponse.StatusCode = HttpStatusCode.OK;
 
             return Ok(_apiResponse);
@@ -83,17 +66,13 @@ public class ProductAPIController : ControllerBase
                 return BadRequest(_apiResponse);
             }
 
-            var product = await _unitOfWork.Product.GetAsync(u => u.Id == id);
+            var product = await _unitOfWork.Product.GetAsyncWithProductImages(u => u.Id == id);
 
             if (product == null)
             {
                 _apiResponse.StatusCode = HttpStatusCode.NotFound;
                 return NotFound(_apiResponse);
             }
-            
-            var productImages = await _unitOfWork.ProductImage.GetAllAsync(u => u.ProductId == product.Id);
-
-            if (productImages != null) product.ProductImages = productImages;
 
             _apiResponse.Result = _mapper.Map<ProductDTO>(product);
             _apiResponse.StatusCode = HttpStatusCode.OK;
@@ -183,6 +162,46 @@ public class ProductAPIController : ControllerBase
     {
         try
         {
+        }
+        catch (Exception e)
+        {
+            _apiResponse.IsSuccess = false;
+            _apiResponse.ErrorMessages = new List<string> { e.ToString() };
+        }
+
+        return _apiResponse;
+    }
+
+    [HttpDelete]
+    public async Task<ActionResult<APIResponse>> DeleteProduct(int id)
+    {
+        try
+        {
+            if (id == 0)
+            {
+                _apiResponse.StatusCode = HttpStatusCode.BadRequest;
+                return BadRequest(_apiResponse);
+            }
+
+            var product = await _unitOfWork.Product.GetAsyncWithProductImages(u => u.Id == id);
+
+            if (product == null)
+            {
+                _apiResponse.StatusCode = HttpStatusCode.NotFound;
+                return NotFound(_apiResponse);
+            }
+            
+            // Delete Image
+            product.ProductImages?.ForEach(productImage =>
+                {
+                    var filePath = productImage.ImagesLocalPath;
+                    if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
+                    _unitOfWork.ProductImage.RemoveAsync(productImage);
+                }
+            );
+
+            await _unitOfWork.Product.RemoveAsync(product);
+            await _unitOfWork.SaveAsync();
         }
         catch (Exception e)
         {
