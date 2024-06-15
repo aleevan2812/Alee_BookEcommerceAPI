@@ -2,6 +2,7 @@ using System.Net;
 using Alee_BookEcommerceAPI.Model;
 using Alee_BookEcommerceAPI.Model.Dto;
 using Alee_BookEcommerceAPI.Repository.IRepository;
+using Alee_BookEcommerceAPI.Sevices;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,15 +13,17 @@ namespace Alee_BookEcommerceAPI.Controllers.V1;
 [ApiController]
 public class ProductAPIController : ControllerBase
 {
+    private readonly IImageService _imageService;
     private readonly IMapper _mapper;
     private readonly IUnitOfWork _unitOfWork;
     protected APIResponse _apiResponse;
 
 
-    public ProductAPIController(IUnitOfWork unitOfWork, IMapper mapper)
+    public ProductAPIController(IUnitOfWork unitOfWork, IMapper mapper, IImageService imageService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _imageService = imageService;
         _apiResponse = new APIResponse();
     }
 
@@ -107,38 +110,8 @@ public class ProductAPIController : ControllerBase
             await _unitOfWork.SaveAsync();
             if (createDto.ProductImages != null)
             {
-                // product.ProductImages = new List<ProductImage>();
-
                 for (int i = 0; i < createDto.ProductImages.Count(); i++)
-                {
-                    string fileName = "productId" + product.Id + "-" + i +
-                                      Path.GetExtension(createDto.ProductImages[i].FileName);
-                    string filePath = @"wwwroot\ProductImages\" + fileName;
-
-                    var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
-
-                    using (var fileStream = new FileStream(directoryLocation, FileMode.Create))
-                    {
-                        createDto.ProductImages[i].CopyTo(fileStream);
-                    }
-
-                    // Lấy URL gốc của ứng dụng bằng cách kết hợp Scheme (HTTP/HTTPS), Host và PathBase từ HttpContext.Request.
-                    var baseUrl =
-                        $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
-
-                    // Create ProductImage
-                    ProductImage productImage = new();
-                    // URL đầy đủ của tệp ảnh để sử dụng trên giao diện người dùng.
-                    productImage.ImageUrl = baseUrl + "/ProductImages/" + fileName;
-                    // Đường dẫn tệp ảnh lưu trữ trên máy chủ.
-                    productImage.ImagesLocalPath = filePath;
-                    productImage.ProductId = product.Id;
-
-                    await _unitOfWork.ProductImage.CreateAsync(productImage);
-                    await _unitOfWork.SaveAsync();
-
-                    // product.ProductImages.Add(productImage); duplicate 2 images
-                }
+                    await _imageService.CreateProductImage(createDto.ProductImages[i], product.Id, HttpContext);
 
                 await _unitOfWork.Product.UpdateAsync(product);
                 await _unitOfWork.SaveAsync();
@@ -167,18 +140,18 @@ public class ProductAPIController : ControllerBase
                 _apiResponse.StatusCode = HttpStatusCode.BadRequest;
                 return BadRequest(_apiResponse);
             }
-            
+
             if (updateDto == null)
                 return BadRequest();
-            
+
             if (updateDto.Id != id)
             {
                 ModelState.AddModelError("ErrorMessages", "Can not modify Id!");
                 return BadRequest(ModelState);
             }
-            
+
             // Product from Db
-            var product = await _unitOfWork.Product.GetAsyncWithProductImages(u => u.Id == id, tracked: false);
+            var product = await _unitOfWork.Product.GetAsyncWithProductImages(u => u.Id == id, false);
 
             if (product == null)
             {
@@ -188,47 +161,15 @@ public class ProductAPIController : ControllerBase
 
             // Delete Image
             var productImages = await _unitOfWork.ProductImage.GetAllAsync(u => u.ProductId == id);
-            productImages.ForEach(productImage =>
-                {
-                    var filePath = productImage.ImagesLocalPath;
-                    if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
-                    _unitOfWork.ProductImage.RemoveAsync(productImage);
-                    _unitOfWork.SaveAsync();
-                }
-            );
+
+            foreach (var productImage in productImages) await _imageService.DeleteProductImage(productImage.Id);
 
             product = _mapper.Map<Product>(updateDto);
-            
+
             if (updateDto.ProductImages != null)
             {
                 for (int i = 0; i < updateDto.ProductImages.Count(); i++)
-                {
-                    string fileName = "productId" + product.Id + "-" + i +
-                                      Path.GetExtension(updateDto.ProductImages[i].FileName);
-                    string filePath = @"wwwroot\ProductImages\" + fileName;
-
-                    var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
-
-                    using (var fileStream = new FileStream(directoryLocation, FileMode.Create))
-                    {
-                        updateDto.ProductImages[i].CopyTo(fileStream);
-                    }
-
-                    // Lấy URL gốc của ứng dụng bằng cách kết hợp Scheme (HTTP/HTTPS), Host và PathBase từ HttpContext.Request.
-                    var baseUrl =
-                        $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
-
-                    // Create ProductImage
-                    ProductImage productImage = new();
-                    // URL đầy đủ của tệp ảnh để sử dụng trên giao diện người dùng.
-                    productImage.ImageUrl = baseUrl + "/ProductImages/" + fileName;
-                    // Đường dẫn tệp ảnh lưu trữ trên máy chủ.
-                    productImage.ImagesLocalPath = filePath;
-                    productImage.ProductId = product.Id;
-
-                    await _unitOfWork.ProductImage.CreateAsync(productImage);
-                    await _unitOfWork.SaveAsync();
-                }
+                    await _imageService.CreateProductImage(updateDto.ProductImages[i], product.Id, HttpContext);
 
                 await _unitOfWork.Product.UpdateAsync(product);
                 await _unitOfWork.SaveAsync();
@@ -266,13 +207,13 @@ public class ProductAPIController : ControllerBase
             }
 
             // Delete Image
-            product.ProductImages?.ForEach(productImage =>
+            if (product.ProductImages != null)
+                foreach (var productImage in product.ProductImages)
                 {
                     var filePath = productImage.ImagesLocalPath;
                     if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
-                    _unitOfWork.ProductImage.RemoveAsync(productImage);
+                    await _unitOfWork.ProductImage.RemoveAsync(productImage);
                 }
-            );
 
             await _unitOfWork.Product.RemoveAsync(product);
             await _unitOfWork.SaveAsync();

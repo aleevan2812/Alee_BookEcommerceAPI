@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Alee_BookEcommerceAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d6a5214461922120a6322f2e16e6f730792fdeff")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+199ae717544c0b793e62ab1e9d85c6cc5770293f")]
 [assembly: System.Reflection.AssemblyProductAttribute("Alee_BookEcommerceAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Alee_BookEcommerceAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

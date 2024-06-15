@@ -108,7 +108,7 @@ public class CategoryAPIController : ControllerBase
 
             _apiResponse.Result = _mapper.Map<CategoryDTO>(category);
             _apiResponse.StatusCode = HttpStatusCode.OK;
-            
+
             return CreatedAtRoute("GetCategory", new { id = category.Id }, _apiResponse);
         }
         catch (Exception e)
@@ -146,26 +146,26 @@ public class CategoryAPIController : ControllerBase
         return _apiResponse;
     }
 
-    [HttpPut("{id:int}",Name = "UpdateCategory")]
+    [HttpPut("{id:int}", Name = "UpdateCategory")]
     public async Task<ActionResult<APIResponse>> UpdateCategory(int id, [FromForm] CategoryUpdateDTO updateDto)
     {
         try
         {
             if (updateDto == null)
                 return BadRequest();
-            
+
             if (updateDto.Id != id)
             {
                 ModelState.AddModelError("ErrorMessages", "Can not modify Id!");
                 return BadRequest(ModelState);
             }
-            
-            if (await _unitOfWork.Category.GetAsync(u => u.Id == updateDto.Id) == null)
+
+            if (await _unitOfWork.Category.GetAsync(u => u.Id == updateDto.Id, false) == null)
             {
                 ModelState.AddModelError("ErrorMessages", "Category is not exists!");
                 return BadRequest(ModelState);
             }
-            
+
             var category = _mapper.Map<Category>(updateDto);
 
             await _unitOfWork.Category.UpdateAsync(category);

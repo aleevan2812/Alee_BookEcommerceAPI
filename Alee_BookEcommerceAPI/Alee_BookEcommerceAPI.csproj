@@ -11,6 +11,7 @@
         <PackageReference Include="Microsoft.AspNet.WebApi.Versioning" Version="5.1.0"/>
         <PackageReference Include="Microsoft.AspNet.WebApi.Versioning.ApiExplorer" Version="5.1.0"/>
         <PackageReference Include="Microsoft.AspNetCore.Mvc.ApiExplorer" Version="2.2.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.6"/>
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.1.0"/>
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer" Version="5.1.0"/>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.2"/>
