@@ -13,12 +13,14 @@ public class MappingConfig : Profile
         CreateMap<Category, CategoryUpdateDTO>().ReverseMap();
         CreateMap<Category, CategoryDTO>().ReverseMap();
 
-        CreateMap<ProductCreateDTO, Product>().ForMember(dest => dest.ProductImages,  opt => opt.Ignore());
-        
-        CreateMap<ProductUpdateDTO, Product>().ForMember(dest => dest.ProductImages,  opt => opt.Ignore());
+        CreateMap<ProductCreateDTO, Product>().ForMember(dest => dest.ProductImages, opt => opt.Ignore());
+
+        CreateMap<ProductUpdateDTO, Product>().ForMember(dest => dest.ProductImages, opt => opt.Ignore());
         CreateMap<Product, ProductDTO>().ReverseMap();
-        
+
         CreateMap<ProductImage, ProductImageCreateDTO>().ReverseMap();
         CreateMap<ProductImage, ProductImageDTO>().ReverseMap();
+
+        CreateMap<ApplicationUser, UserDTO>().ReverseMap();
     }
 }

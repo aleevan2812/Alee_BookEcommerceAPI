@@ -1,4 +1,5 @@
 using Alee_BookEcommerceAPI.Data;
+using Alee_BookEcommerceAPI.Model;
 using Alee_BookEcommerceAPI.Repository.IRepository;
 
 namespace Alee_BookEcommerceAPI.Repository;
@@ -13,6 +14,7 @@ public class UnitOfWork : IUnitOfWork
         Category = new CategoryRepository(_db);
         Product = new ProductRepository(_db);
         ProductImage = new ProductImageRepository(_db);
+        
     }
 
     public ICategoryRepository Category { get; }

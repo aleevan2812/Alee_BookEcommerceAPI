@@ -3,6 +3,7 @@ using Alee_BookEcommerceAPI.Model;
 using Alee_BookEcommerceAPI.Model.Dto;
 using Alee_BookEcommerceAPI.Repository.IRepository;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Alee_BookEcommerceAPI.Controllers.V1;
@@ -55,6 +56,7 @@ public class CategoryAPIController : ControllerBase
     }
 
 
+    [Authorize(Roles = "admin")]
     [HttpGet("{id:int}", Name = "GetCategory")]
     public async Task<ActionResult<APIResponse>> GetCategory(int id)
     {
