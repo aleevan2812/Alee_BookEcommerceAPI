@@ -9,21 +9,23 @@ namespace Alee_BookEcommerceAPI.Controllers;
 [Route("api/v{version:apiVersion}/UsersAuth")]
 [ApiVersionNeutral] // API trung lập
 [ApiController]
-public class UserController : Controller
+public class AuthController : Controller
 {
-    private readonly IUserRepository _userRepo;
+    private readonly IAuthRepository _authRepo;
+    private readonly IUnitOfWork _unitOfWork;
     protected APIResponse _response;
 
-    public UserController(IUserRepository userRepo)
+    public AuthController(IAuthRepository authRepo, IUnitOfWork unitOfWork)
     {
-        _userRepo = userRepo;
+        _authRepo = authRepo;
+        _unitOfWork = unitOfWork;
         _response = new APIResponse();
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDTO model)
     {
-        var tokenDto = await _userRepo.Login(model);
+        var tokenDto = await _authRepo.Login(model);
         if (tokenDto == null || string.IsNullOrEmpty(tokenDto.AccessToken))
         {
             _response.StatusCode = HttpStatusCode.BadRequest;
@@ -41,7 +43,7 @@ public class UserController : Controller
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterationRequestDTO model)
     {
-        bool ifUserNameUnique = _userRepo.IsUniqueUser(model.UserName);
+        bool ifUserNameUnique = await _unitOfWork.User.IsUniqueUserAsync(model.UserName);
         if (!ifUserNameUnique)
         {
             _response.StatusCode = HttpStatusCode.BadRequest;
@@ -50,7 +52,7 @@ public class UserController : Controller
             return BadRequest(_response);
         }
 
-        var user = await _userRepo.Register(model);
+        var user = await _authRepo.Register(model);
         if (user == null)
         {
             _response.StatusCode = HttpStatusCode.BadRequest;
@@ -69,7 +71,7 @@ public class UserController : Controller
     {
         if (ModelState.IsValid)
         {
-            var tokenDTOResponse = await _userRepo.RefreshAccessToken(tokenDTO);
+            var tokenDTOResponse = await _authRepo.RefreshAccessToken(tokenDTO);
             if (tokenDTOResponse == null || string.IsNullOrEmpty(tokenDTOResponse.AccessToken))
             {
                 _response.StatusCode = HttpStatusCode.BadRequest;
@@ -94,7 +96,7 @@ public class UserController : Controller
     {
         if (ModelState.IsValid)
         {
-            await _userRepo.RevokeRefreshToken(tokenDTO);
+            await _authRepo.RevokeRefreshToken(tokenDTO);
             _response.IsSuccess = true;
             _response.StatusCode = HttpStatusCode.OK;
             return Ok(_response);

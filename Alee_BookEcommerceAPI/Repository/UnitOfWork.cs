@@ -14,12 +14,13 @@ public class UnitOfWork : IUnitOfWork
         Category = new CategoryRepository(_db);
         Product = new ProductRepository(_db);
         ProductImage = new ProductImageRepository(_db);
-        
+        User = new UserRepository(_db);
     }
 
     public ICategoryRepository Category { get; }
     public IProductRepository Product { get; }
     public IProductImageRepository ProductImage { get; }
+    public IUserRepository User { get; }
 
     public async Task SaveAsync()
     {
