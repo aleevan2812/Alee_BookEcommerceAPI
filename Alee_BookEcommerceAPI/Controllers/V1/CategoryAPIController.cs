@@ -5,6 +5,7 @@ using Alee_BookEcommerceAPI.Repository.IRepository;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Utility;
 
 namespace Alee_BookEcommerceAPI.Controllers.V1;
 
@@ -55,8 +56,7 @@ public class CategoryAPIController : ControllerBase
         return _apiResponse;
     }
 
-
-    [Authorize(Roles = "admin")]
+    
     [HttpGet("{id:int}", Name = "GetCategory")]
     public async Task<ActionResult<APIResponse>> GetCategory(int id)
     {
@@ -89,6 +89,7 @@ public class CategoryAPIController : ControllerBase
         return _apiResponse;
     }
 
+    [Authorize(Roles = SD.Role_Admin + "," + SD.Role_Editor)]
     [HttpPost]
     public async Task<ActionResult<APIResponse>> CreateCategory([FromForm] CategoryCreateDTO createDto)
     {
@@ -121,7 +122,8 @@ public class CategoryAPIController : ControllerBase
 
         return _apiResponse;
     }
-
+    
+    [Authorize(Roles = SD.Role_Admin + "," + SD.Role_Editor)]
     [HttpDelete("{id:int}", Name = "DeleteCategory")]
     public async Task<ActionResult<APIResponse>> DeleteCategory(int id)
     {
@@ -136,7 +138,6 @@ public class CategoryAPIController : ControllerBase
             await _unitOfWork.Category.RemoveAsync(category);
             await _unitOfWork.SaveAsync();
             _apiResponse.StatusCode = HttpStatusCode.NoContent;
-            _apiResponse.Result = _mapper.Map<CategoryDTO>(category);
             return Ok(_apiResponse);
         }
         catch (Exception e)
@@ -148,6 +149,7 @@ public class CategoryAPIController : ControllerBase
         return _apiResponse;
     }
 
+    [Authorize(Roles = SD.Role_Admin + "," + SD.Role_Editor)]
     [HttpPut("{id:int}", Name = "UpdateCategory")]
     public async Task<ActionResult<APIResponse>> UpdateCategory(int id, [FromForm] CategoryUpdateDTO updateDto)
     {

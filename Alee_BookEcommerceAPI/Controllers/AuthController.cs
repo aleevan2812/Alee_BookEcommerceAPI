@@ -1,8 +1,12 @@
 using System.Net;
+using Alee_BookEcommerceAPI.Data;
 using Alee_BookEcommerceAPI.Model;
 using Alee_BookEcommerceAPI.Model.Dto;
 using Alee_BookEcommerceAPI.Repository.IRepository;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Utility;
 
 namespace Alee_BookEcommerceAPI.Controllers;
 
@@ -11,14 +15,18 @@ namespace Alee_BookEcommerceAPI.Controllers;
 [ApiController]
 public class AuthController : Controller
 {
+    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly IAuthRepository _authRepo;
     private readonly IUnitOfWork _unitOfWork;
     protected APIResponse _response;
 
-    public AuthController(IAuthRepository authRepo, IUnitOfWork unitOfWork)
+    public AuthController(IAuthRepository authRepo, IUnitOfWork unitOfWork, RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager)
     {
         _authRepo = authRepo;
         _unitOfWork = unitOfWork;
+        _roleManager = roleManager;
+        _userManager = userManager;
         _response = new APIResponse();
     }
 
@@ -105,5 +113,46 @@ public class AuthController : Controller
         _response.IsSuccess = false;
         _response.Result = "Invalid Input";
         return BadRequest(_response);
+    }
+
+    [HttpPost("resetAdmin")]
+    public async Task<ActionResult<APIResponse>> CreateRole()
+    {
+        try
+        {
+            //create roles if they are not created
+            if (!(await _roleManager.RoleExistsAsync(SD.Role_Admin)))
+            {
+                await _roleManager.CreateAsync(new IdentityRole(SD.Role_Admin));
+                await _roleManager.CreateAsync(new IdentityRole(SD.Role_Editor));
+                await _roleManager.CreateAsync(new IdentityRole(SD.Role_Viewer));
+            }
+            
+            //if roles are not created, then we will create admin user as well
+
+            var user = await _unitOfWork.User.GetAsync(u => u.UserName == "admin");
+            if (user != null)
+            {
+                await _unitOfWork.User.RemoveAsync(user);
+            }
+
+            await _userManager.CreateAsync(new ApplicationUser
+            {
+                UserName = "admin",
+                Name = "My name is admin",
+                Role = SD.Role_Admin
+            }, "Alee123.");
+            await _userManager.AddToRoleAsync(user, SD.Role_Admin);
+
+            _response.StatusCode = HttpStatusCode.OK;
+            return Ok(_response);
+        }
+        catch (Exception e)
+        {
+            _response.IsSuccess = false;
+            _response.ErrorMessages = new List<string> { e.ToString() };
+        }
+
+        return _response;
     }
 }

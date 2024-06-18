@@ -176,7 +176,7 @@ public class AuthRepository : IAuthRepository
             }),
             // Expires: Thời hạn của token, ở đây là 7 ngày kể từ thời điểm tạo.
             // Expires = DateTime.UtcNow.AddDays(7),
-            Expires = DateTime.UtcNow.AddMinutes(3),
+            Expires = DateTime.UtcNow.AddMinutes(10),
             Issuer = "https://magicvilla-api.com",
             Audience = "https://test-magic-api.com",
             // SigningCredentials: Chứa thông tin về phương thức ký token, sử dụng thuật toán HMAC SHA256 với khóa đối xứng (SymmetricSecurityKey).
@@ -214,7 +214,7 @@ public class AuthRepository : IAuthRepository
             UserId = userId,
             JwtTokenId = tokenId,
             // ExpiresAt = DateTime.UtcNow.AddDays(30),
-            ExpiresAt = DateTime.UtcNow.AddMinutes(5),
+            ExpiresAt = DateTime.UtcNow.AddMinutes(15),
             Refresh_Token = Guid.NewGuid() + "-" + Guid.NewGuid()
         };
 

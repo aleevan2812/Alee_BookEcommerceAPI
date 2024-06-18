@@ -4,7 +4,9 @@ using Alee_BookEcommerceAPI.Model.Dto.ProductImage;
 using Alee_BookEcommerceAPI.Repository.IRepository;
 using Alee_BookEcommerceAPI.Sevices;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Utility;
 
 namespace Alee_BookEcommerceAPI.Controllers.V1;
 
@@ -49,7 +51,7 @@ public class ImageAPIController : ControllerBase
         return _apiResponse;
     }
 
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:int}", Name = "GetImage")]
     public async Task<ActionResult<APIResponse>> GetImage(int id)
     {
         try
@@ -82,6 +84,7 @@ public class ImageAPIController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = SD.Role_Admin + "," + SD.Role_Editor)]
     public async Task<ActionResult<APIResponse>> DeleteImage(int id)
     {
         try
@@ -120,6 +123,7 @@ public class ImageAPIController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = SD.Role_Admin + "," + SD.Role_Editor)]
     public async Task<ActionResult<APIResponse>> CreateImage([FromForm] ProductImageCreateDTO createDto)
     {
         try
@@ -151,7 +155,8 @@ public class ImageAPIController : ControllerBase
             await _unitOfWork.ProductImage.CreateAsync(productImage);
             await _unitOfWork.SaveAsync();
 
-            _apiResponse.StatusCode = HttpStatusCode.OK;
+            _apiResponse.Result = _mapper.Map<ProductImageDTO>(productImage);
+            _apiResponse.StatusCode = HttpStatusCode.Created;
             return CreatedAtRoute("GetImage", new { id = productImage.Id }, _apiResponse);
         }
         catch (Exception e)

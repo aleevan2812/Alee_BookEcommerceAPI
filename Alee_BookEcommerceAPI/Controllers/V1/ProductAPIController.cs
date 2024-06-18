@@ -4,7 +4,9 @@ using Alee_BookEcommerceAPI.Model.Dto;
 using Alee_BookEcommerceAPI.Repository.IRepository;
 using Alee_BookEcommerceAPI.Sevices;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Utility;
 
 namespace Alee_BookEcommerceAPI.Controllers.V1;
 
@@ -91,6 +93,7 @@ public class ProductAPIController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = SD.Role_Admin + "," + SD.Role_Editor)]
     public async Task<ActionResult<APIResponse>> CreateProduct([FromForm] ProductCreateDTO createDto)
     {
         try
@@ -131,6 +134,7 @@ public class ProductAPIController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Roles = SD.Role_Admin + "," + SD.Role_Editor)]
     public async Task<ActionResult<APIResponse>> UpdateProduct(int id, [FromForm] ProductUpdateDTO updateDto)
     {
         try
@@ -170,13 +174,14 @@ public class ProductAPIController : ControllerBase
             {
                 for (int i = 0; i < updateDto.ProductImages.Count(); i++)
                     await _imageService.CreateProductImage(updateDto.ProductImages[i], product.Id, HttpContext);
-
-                await _unitOfWork.Product.UpdateAsync(product);
-                await _unitOfWork.SaveAsync();
-
-                _apiResponse.StatusCode = HttpStatusCode.OK;
-                return CreatedAtRoute("GetProduct", new { id = product.Id }, _apiResponse);
             }
+            
+            await _unitOfWork.Product.UpdateAsync(product);
+            await _unitOfWork.SaveAsync();
+
+            _apiResponse.Result = product;
+            _apiResponse.StatusCode = HttpStatusCode.OK;
+            return CreatedAtRoute("GetProduct", new { id = product.Id }, _apiResponse);
         }
         catch (Exception e)
         {
@@ -188,6 +193,7 @@ public class ProductAPIController : ControllerBase
     }
 
     [HttpDelete]
+    [Authorize(Roles = SD.Role_Admin + "," + SD.Role_Editor)]
     public async Task<ActionResult<APIResponse>> DeleteProduct(int id)
     {
         try

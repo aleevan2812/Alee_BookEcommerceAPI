@@ -104,7 +104,10 @@ builder.Services.AddSwaggerGen(options =>
     }
 );
 
+
 var app = builder.Build();
+
+// SeedDatabase();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -124,3 +127,12 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// void SeedDatabase()
+// {
+//     using (var scope = app.Services.CreateScope())
+//     {
+//         var services  = scope.ServiceProvider;
+//         DbInitializer.Initialize(services);
+//     }
+// }
